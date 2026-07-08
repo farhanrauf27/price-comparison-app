@@ -1,13 +1,98 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Users Table
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  name          String?
+  password      String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  favorites     Favorite[]
+  searchHistory SearchHistory[]
+  alerts        Alert[]
+}
+
+// 2. Categories Table
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+// 3. Products Table
+model Product {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  image         String?        // For Cloudinary product images
+  categoryId    String
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  retailers     Retailer[]     // A product can be sold across multiple retailers
+  priceHistory  PriceHistory[]
+  favorites     Favorite[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// 4. Retailers Table (Stores current price information per store)
+model Retailer {
+  id         String   @id @default(uuid())
+  name       String   // e.g., "Amazon", "eBay", "Walmart"
+  productUrl String   @unique // Direct link to buy the item
+  price      Float    // Current live price
+  currency   String   @default("USD")
+  inStock    Boolean  @default(true)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  updatedAt  DateTime @updatedAt
+}
+
+// 5. PriceHistory Table (For tracking trends and Chart.js rendering)
+model PriceHistory {
+  id        String   @id @default(uuid())
+  price     Float
+  storeName String   // Stores which retailer had this price point
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) // Timestamp of when the price log was taken
+}
+
+// 6. Favorites Table
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId]) // Keeps a user from favoriting the same item twice
+}
+
+// 7. SearchHistory Table
+model SearchHistory {
+  id        String   @id @default(uuid())
+  query     String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// 8. Alerts Table (For custom price drop alerts)
+model Alert {
+  id           String   @id @default(uuid())
+  targetPrice  Float
+  isActive     Boolean  @default(true)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 }
