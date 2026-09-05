@@ -1,15 +1,24 @@
-import { PrismaClient } from '@prisma/client';
+import "dotenv/config";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
+import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
+
+const adapter = new PrismaNeon({
+  connectionString: process.env.POSTGRES_URL_NON_POOLING!,
+});
+
+const globalForPrisma = globalThis as {
+  prisma?: PrismaClient;
 };
 
-declare global {
-  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
-
 export default prisma;
-
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
