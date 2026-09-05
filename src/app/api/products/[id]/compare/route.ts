@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
-    const deals = product.retailers.map(r => ({
+    const deals = product.retailers.map((r: any) => ({
       title: product.title,
       imageUrl: product.image ?? '',
       rating: 0,
