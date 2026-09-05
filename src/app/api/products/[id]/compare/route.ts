@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/config/db';
 import { calculatePriceComparison } from '@/lib/comparisonEngine';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = params.id;
+    const { id: productId } = await params;
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -21,9 +21,12 @@ export async function GET(
     }
 
     const deals = product.retailers.map(r => ({
+      title: product.title,
+      imageUrl: product.image ?? '',
+      rating: 0,
       retailerName: r.name,
       price: r.price,
-      deliveryCharges: 0, // Extend this field if present in schema
+      deliveryCharges: 0,
       isAvailable: r.inStock,
       productUrl: r.productUrl,
       sellerName: r.name

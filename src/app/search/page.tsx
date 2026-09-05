@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import PriceComparisonTable from '@/components/PriceComparisonTable';
 import { calculatePriceComparison, PriceComparisonSummary, RetailerDeal } from '@/lib/comparisonEngine';
 import { Search, Loader2 } from 'lucide-react';
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get('query') || searchParams.get('category') || '';
 
@@ -146,5 +146,20 @@ export default function SearchPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center py-20">
+          <Loader2 size={40} className="animate-spin mx-auto text-indigo-600 mb-4" />
+          <p className="text-slate-600 font-medium">Loading search interface...</p>
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }
