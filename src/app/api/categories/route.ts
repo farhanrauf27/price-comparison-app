@@ -20,7 +20,7 @@ export async function GET() {
 
     return NextResponse.json({
       categories,
-      retailers: retailersSummary.map(r => r.name)
+      retailers: retailersSummary.map((r: { name: string }) => r.name)
     }, { status: 200 });
 
   } catch (error: any) {
